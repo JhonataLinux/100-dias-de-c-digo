@@ -1,0 +1,59 @@
+from sqlite3.dbapi2 import connect
+import sqlite3 
+import pandas as pd
+
+conn = sqlite3.connect('atividade.db', timeout=10)
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS funcionario(
+  id_funcionario INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  nome VARCHAR(100) NOT NULL
+
+)
+""")
+cur.execute("""
+CREATE TABLE IF NOT EXISTS departamento(
+  id_departamento INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  nome_departamento VARCHAR(100) NOT NULL
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS alocacao(
+  id_alocacao INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  data_matricula DATE NOT NULL,
+  id_funcionario INTEGER NOT NULL,
+  id_departamento INTEGER NOT NULL,
+
+  FOREIGN KEY (id_funcionario) REFERENCES  funcionario(id_funcionario),
+  FOREIGN KEY (id_departamento) REFERENCES departamento(id_departamento)
+)
+""")
+
+cur.execute("INSERT INTO funcionario (nome) VALUES ('Joao')")
+cur.execute("INSERT INTO funcionario (nome) VALUES ('Bernardo')")
+cur.execute("INSERT INTO funcionario (nome) VALUES ('Maria')")
+
+cur.execute("INSERT INTO departamento (nome_departamento) VALUES ('RH')")
+cur.execute("INSERT INTO departamento (nome_departamento) VALUES ('TI')")
+cur.execute("INSERT INTO departamento (nome_departamento) VALUES ('Financeiro')")
+
+cur.execute("INSERT INTO alocacao ( data_matricula, id_funcionario, id_departamento) VALUES ('2020-10-01', 1, 2)")
+cur.execute("INSERT INTO alocacao (data_matricula, id_funcionario, id_departamento) VALUES ('2021-09-15', 2, 3)")
+cur.execute("INSERT INTO alocacao (data_matricula, id_funcionario, id_departamento) VALUES ('2025-05-30', 3, 1)")
+
+
+df = pd.read_sql_query("""
+SELECT 
+m.nome AS nome_funcionario,
+d.nome_departamento AS nome_departamento,
+a.data_matricula AS data_matricula
+FROM alocacao AS a
+INNER JOIN funcionario AS m ON a.id_funcionario = m.id_funcionario
+INNER JOIN departamento AS d ON a.id_departamento = d.id_departamento
+""", conn)
+
+conn.commit()
+print(df)
+conn.close()
