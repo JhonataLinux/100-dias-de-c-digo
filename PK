@@ -1,0 +1,75 @@
+import sqlite3
+import pandas as pd
+
+conn = sqlite3.connect('banco_dados', timeout=10)
+cur = conn.cursor()
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS alunos (
+    id_aluno INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    nome VARCHAR(100) NOT NULL
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS cursos (
+    id_curso INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    nome_cursos VARCHAR(100) NOT NULL,
+    duracao INTEGER NOT NULL
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS matriculas (
+  id_matricula INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  id_aluno INT,
+  id_curso INT,
+  data_matricula DATE,
+
+  FOREIGN KEY (id_aluno) REFERENCES alunos(id_aluno),
+  FOREIGN KEY (id_curso) REFERENCES cursos(id_curso)
+  )
+""")
+
+cur.execute("INSERT INTO alunos (nome) VALUES ('João')")
+cur.execute("INSERT INTO alunos (nome) VALUES ('Jhonatan')")
+cur.execute("INSERT INTO alunos (nome) VALUES ('Isabela')")
+
+
+cur.execute("INSERT INTO cursos (nome_cursos, duracao) VALUES ('Python', 12)")
+cur.execute("INSERT INTO cursos (nome_cursos, duracao) VALUES ('Java', 50)")
+cur.execute("INSERT INTO cursos (nome_cursos, duracao) VALUES ('React', 120)")
+
+cur.execute("INSERT INTO matriculas (id_aluno, id_curso, data_matricula) VALUES (1, 1, '10-12-2021')")
+cur.execute("INSERT INTO matriculas (id_aluno, id_curso, data_matricula) VALUES (2, 3, '15-01-2025')")
+cur.execute("INSERT INTO matriculas (id_aluno, id_curso, data_matricula) VALUES (3, 2, '01-05-2022')")
+
+
+cur.execute("""
+SELECT
+  m.id_matricula,
+  a.nome AS aluno,
+  c.nome_cursos AS curso,
+  m.data_matricula
+  FROM matriculas m
+  JOIN alunos a ON m.id_aluno = a.id_aluno
+  JOIN cursos c ON m.id_curso = c.id_curso
+""")
+
+conn.commit()
+conn.close()
+
+
+conn = sqlite3.connect('banco_dados')
+df = pd.read_sql_query("""
+SELECT
+  m.id_matricula,
+  a.nome AS aluno,
+  c.nome_cursos AS curso,
+  m.data_matricula
+FROM matriculas m
+JOIN alunos a ON m.id_aluno = a.id_aluno
+JOIN cursos c ON m.id_curso = c.id_curso
+""", conn)
+conn.close()
+print(df)
